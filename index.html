@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigenère Cipher Encryption Tool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3f5f7; --panel:#fff; --ink:#16212b; --mute:#5d6b78; --line:#dde3e9;
+  --brand:#1f4e5f; --brand-d:#163b48; --accent:#c8862a; --soft:#e8f0f3;
+  --ok:#237a57; --err:#b3352d; --errbg:#fbeceb;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0f161c;--panel:#17212a;--ink:#e7edf1;--mute:#93a3b0;--line:#2a3743;
+  --brand:#5fb0c7;--brand-d:#7cc4d8;--accent:#e2a347;--soft:#1d2b35;--ok:#5cc79b;--err:#f08b84;--errbg:#3a1f1e}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif;min-height:100vh}
+.wrap{max-width:1040px;margin:0 auto;padding:40px 20px 56px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+h1{font:600 34px/1.15 Fraunces,Georgia,serif;margin:0;letter-spacing:-.01em}
+header p{margin:6px 0 0;color:var(--mute);max-width:52ch}
+.formula{font:500 13px 'JetBrains Mono',monospace;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--mute);line-height:1.7}
+.formula b{color:var(--brand);font-weight:500}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px}
+h2{font:600 16px/1.3 Inter;margin:0 0 18px}
+label.f{display:block;font-weight:500;margin:0 0 6px}
+.field{margin-bottom:20px}
+.hint{color:var(--mute);font-size:13px;margin-top:6px}
+.drop{border:1.5px dashed var(--line);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:.15s;background:var(--bg)}
+.drop:hover,.drop.over,.drop:focus-visible{border-color:var(--brand);background:var(--soft);outline:none}
+.drop.has{border-style:solid;border-color:var(--brand);background:var(--soft)}
+.drop strong{display:block;font-weight:600}
+.drop span{color:var(--mute);font-size:13px}
+.drop input{display:none}
+input.key{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:500 16px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase}
+input.key::placeholder{text-transform:none;letter-spacing:0;font-family:Inter;font-weight:400;color:var(--mute)}
+input.key:focus{outline:2px solid var(--brand);outline-offset:1px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg input{position:absolute;opacity:0}
+.seg label{text-align:center;padding:9px;border-radius:8px;cursor:pointer;font-weight:500;color:var(--mute);transition:.15s}
+.seg input:checked+label{background:var(--brand);color:#fff}
+.seg input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+button{font:600 15px Inter;border:0;border-radius:10px;padding:13px 18px;cursor:pointer;transition:.15s}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.primary{width:100%;background:var(--brand);color:#fff}
+.primary:hover{background:var(--brand-d)}
+.primary:disabled{opacity:.6;cursor:wait}
+.ghost{background:var(--soft);color:var(--brand);padding:9px 14px;font-size:14px}
+.ghost:hover{filter:brightness(.96)}
+.dl{background:var(--accent);color:#1b1305}
+.err{display:none;background:var(--errbg);color:var(--err);border-radius:10px;padding:11px 14px;margin-top:14px;font-weight:500;font-size:14px}
+.err.on{display:block}
+.status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;min-height:38px}
+.pill{display:inline-flex;align-items:center;gap:7px;border-radius:99px;padding:5px 12px;font-size:13px;font-weight:500;background:var(--soft);color:var(--mute)}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.pill.ok{color:var(--ok)} .pill.ok i{background:var(--ok)}
+.actions{margin-left:auto;display:flex;gap:8px}
+.twin{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.twin{grid-template-columns:1fr}}
+.twin h3{font:500 13px Inter;color:var(--mute);margin:0 0 6px}
+pre{margin:0;height:230px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:400 13px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word}
+pre.empty{color:var(--mute);font-family:Inter}
+.align{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}
+.align h3{font:600 14px Inter;margin:0 0 4px}
+.rows{overflow-x:auto;padding-bottom:6px}
+table{border-collapse:separate;border-spacing:4px;font:500 14px 'JetBrains Mono',monospace;margin-top:10px}
+th{font:400 12px Inter;color:var(--mute);text-align:left;padding-right:10px;white-space:nowrap}
+td{width:30px;height:32px;text-align:center;border-radius:6px;background:var(--bg)}
+tr.k td{background:var(--soft);color:var(--brand)}
+tr.o td{background:var(--brand);color:#fff}
+td.skip{background:transparent}
+footer{margin-top:22px;color:var(--mute);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Vigenère Cipher Encryption Tool</h1>
+      <p>Enkripsi dan dekripsi file teks dengan cipher polialfabetik. File diproses di memori dan tidak disimpan.</p>
+    </div>
+    <div class="formula"><b>Enkripsi</b> C = (P + K) mod 26<br><b>Dekripsi</b> P = (C − K) mod 26</div>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-labelledby="t-in">
+      <h2 id="t-in">Pengaturan</h2>
+      <div class="field">
+        <label class="f" for="file">File teks</label>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Pilih file txt">
+          <strong id="fname">Pilih atau seret file .txt ke sini</strong>
+          <span id="fmeta">Maksimal 2 MB</span>
+          <input type="file" id="file" accept=".txt,text/plain">
+        </div>
+      </div>
+      <div class="field">
+        <label class="f" for="key">Key</label>
+        <input class="key" id="key" type="text" autocomplete="off" spellcheck="false" placeholder="Contoh: KEY" maxlength="64">
+        <div class="hint">Hanya huruf A–Z. Key diulang mengikuti panjang pesan.</div>
+      </div>
+      <div class="field">
+        <label class="f" id="mlabel">Mode</label>
+        <div class="seg" role="radiogroup" aria-labelledby="mlabel">
+          <input type="radio" name="mode" id="m-e" value="encrypt" checked><label for="m-e">Enkripsi</label>
+          <input type="radio" name="mode" id="m-d" value="decrypt"><label for="m-d">Dekripsi</label>
+        </div>
+      </div>
+      <button class="primary" id="go">Proses file</button>
+      <div class="err" id="err" role="alert"></div>
+    </section>
+
+    <section class="card" aria-labelledby="t-out">
+      <h2 id="t-out">Hasil</h2>
+      <div class="status">
+        <span class="pill" id="pill"><i></i><span id="ptxt">Menunggu file dan key</span></span>
+        <div class="actions" id="acts" hidden>
+          <button class="ghost" id="copy">Salin</button>
+          <button class="dl" id="dl">Unduh hasil</button>
+        </div>
+      </div>
+      <div class="twin">
+        <div><h3>Teks asli</h3><pre id="src" class="empty">Isi file akan tampil di sini.</pre></div>
+        <div><h3 id="rlabel">Hasil</h3><pre id="res" class="empty">Hasil proses akan tampil di sini.</pre></div>
+      </div>
+      <div class="align" id="align" hidden>
+        <h3>Cara key diterapkan</h3>
+        <div class="hint">Contoh 16 huruf pertama. Spasi dan tanda baca dilewati, dan tidak menggeser key.</div>
+        <div class="rows"><table id="tbl"></table></div>
+      </div>
+    </section>
+  </div>
+  <footer>Berjalan lokal di komputer Anda. Tidak ada database dan tidak ada data yang tersimpan.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let file = null, out = null, srcText = "";
+
+const drop = $("drop"), fin = $("file");
+drop.onclick = () => fin.click();
+drop.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fin.click(); } };
+["dragover","dragenter"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => setFile(e.dataTransfer.files[0]));
+fin.onchange = () => setFile(fin.files[0]);
+
+function setFile(f) {
+  if (!f) return;
+  file = f; out = null; showErr("");
+  $("fname").textContent = f.name;
+  $("fmeta").textContent = (f.size / 1024).toFixed(1) + " KB";
+  drop.classList.add("has");
+  f.text().then(t => { srcText = t; setPre("src", t || "(file kosong)"); });
+  reset("Siap diproses");
+}
+function setPre(id, t) { const p = $(id); p.textContent = t; p.classList.remove("empty"); }
+function reset(msg) {
+  $("pill").className = "pill"; $("ptxt").textContent = msg;
+  $("acts").hidden = true; $("align").hidden = true;
+  const r = $("res"); r.textContent = "Hasil proses akan tampil di sini."; r.classList.add("empty");
+}
+function showErr(m) { const e = $("err"); e.textContent = m; e.classList.toggle("on", !!m); }
+
+$("key").addEventListener("input", e => { e.target.value = e.target.value.replace(/[^a-zA-Z]/g, ""); });
+
+$("go").onclick = async () => {
+  showErr("");
+  const mode = document.querySelector("input[name=mode]:checked").value;
+  const key = $("key").value.trim();
+  if (!file) return showErr("Pilih file .txt terlebih dahulu.");
+  if (!key) return showErr("Key belum diisi.");
+  const fd = new FormData();
+  fd.append("file", file); fd.append("key", key); fd.append("mode", mode);
+  $("go").disabled = true; $("go").textContent = "Memproses…";
+  try {
+    const r = await fetch("/process", { method: "POST", body: fd });
+    const j = await r.json();
+    if (!j.ok) { showErr(j.error); reset("Proses gagal"); return; }
+    out = j;
+    $("rlabel").textContent = mode === "encrypt" ? "Ciphertext" : "Plaintext";
+    setPre("res", j.result);
+    $("pill").className = "pill ok";
+    $("ptxt").textContent = (mode === "encrypt" ? "Enkripsi" : "Dekripsi") + " selesai · " + j.letters + " huruf";
+    $("acts").hidden = false;
+    drawAlign(srcText, key, j.result);
+  } catch { showErr("Server tidak dapat dihubungi. Pastikan app.py sedang berjalan."); }
+  finally { $("go").disabled = false; $("go").textContent = "Proses file"; }
+};
+
+function drawAlign(src, key, res) {
+  const K = key.toUpperCase(), P = [], C = [], Ks = [];
+  for (let i = 0, n = 0; i < src.length && P.length < 16; i++) {
+    if (/[a-zA-Z]/.test(src[i])) { P.push(src[i].toUpperCase()); C.push(res[i].toUpperCase()); Ks.push(K[n++ % K.length]); }
+  }
+  const row = (cls, name, arr) => `<tr class="${cls}"><th>${name}</th>${arr.map(c => `<td>${c}</td>`).join("")}</tr>`;
+  const enc = document.querySelector("input[name=mode]:checked").value === "encrypt";
+  $("tbl").innerHTML = row("", enc ? "Plaintext" : "Ciphertext", enc ? P : C) + row("k", "Key", Ks) + row("o", enc ? "Ciphertext" : "Plaintext", enc ? C : P);
+  $("align").hidden = P.length === 0;
+}
+
+$("dl").onclick = () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([out.result], { type: "text/plain;charset=utf-8" }));
+  a.download = out.filename; a.click(); URL.revokeObjectURL(a.href);
+};
+$("copy").onclick = async () => {
+  await navigator.clipboard.writeText(out.result);
+  $("copy").textContent = "Tersalin"; setTimeout(() => $("copy").textContent = "Salin", 1500);
+};
+</script>
+</body>
+</html>
